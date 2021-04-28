@@ -1,13 +1,13 @@
-import { FC, useContext } from 'react';
+import { FC } from 'react';
 import styled from 'styled-components';
-import { SessionContext } from '../App';
+import useSession from '../lib/useSession';
 
 interface ILayoutProps {
   title: string
 }
 
 const Component: FC<ILayoutProps> = props => {
-  const { session, setSession } = useContext(SessionContext);
+  const { session, setSession } = useSession();
   return (
     <Layout>
       <Header>
@@ -107,6 +107,7 @@ const Title = styled.h2`
   font-size: 30px;
   font-weight: 500;
   font-family: 'Times New Roman', serif;
+  text-transform: capitalize;
 `;
 
 const Footer = styled.footer`

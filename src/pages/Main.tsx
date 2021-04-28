@@ -1,7 +1,8 @@
-import { FC, Fragment, useContext, useState } from 'react';
+import { FC, Fragment, useState, Suspense } from 'react';
 import styled from 'styled-components';
 
-import { SessionContext } from '../App';
+import useSession from '../lib/useSession';
+import pages from '../pages';
 import Layout from '../components/Layout';
 
 interface IMainProps {
@@ -17,7 +18,7 @@ interface IButtonStyleProps extends IButtonProps {
 }
 
 const Main: FC<IMainProps> = () => {
-  const { session } = useContext(SessionContext);
+  const { session } = useSession();
   const [page, setPage] = useState<number>(0);
 
   const Button: FC<IButtonProps> = props => (
@@ -27,24 +28,18 @@ const Main: FC<IMainProps> = () => {
     </SideButton>
   );
 
+  const Content = pages[session!.role][page].page;
   return (
-    <StyledLayout title={session!.role === 'staff' ? "Staff Services" : "Student Services"}>
+    <StyledLayout title={`${session!.role} services`}>
       <aside>
-        {session!.role === 'staff' ? (
-          <Fragment>
-            <Button index={0}>Create new Room</Button>
-            <Button index={1}>Room Settings</Button>
-          </Fragment>
-        ) : (
-          <Fragment>
-            <Button index={0}>View Calendar</Button>
-            <Button index={1}>View Available Rooms</Button>
-            <Button index={2}>Booking History</Button>
-          </Fragment>
-        )}
+        {pages[session!.role].map((page, i) => (
+          <Button index={i} key={i}>{page.name}</Button>
+        ))}
       </aside>
       <main>
-        body
+        <Suspense fallback={<Fragment/>}>
+          <Content />
+        </Suspense>
       </main>
     </StyledLayout>
   );
@@ -62,7 +57,7 @@ const StyledLayout = styled(Layout)`
   }
 
   > main {
-    // here
+    padding: 10px;
   }
 `;
 
@@ -80,6 +75,7 @@ const SideButton = styled.button<IButtonStyleProps>`
 
   &:hover {
     cursor: pointer;
-    background-color: #ddd;
+    background-color: #677683;
+    color: #fff;
   }
 `;

@@ -19,11 +19,16 @@ const Login: FC<ILoginProps> = ({ login }) => {
   const [role, setRole] = useState<string>('student');
 
   function handleSubmit() {
-    // TODO: here
-    if (username) {
-      login(username);
+    if (mode) {
+      // TODO: signup new account here.
     }
-    else setError("Invalid Username or Password. Please try again.");
+    else {
+      // TODO: login authentication here.
+      if (username) {
+        login(username);
+      }
+      else setError("Invalid Username or Password. Please try again.");
+    }
   }
 
   return (

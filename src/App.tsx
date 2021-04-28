@@ -3,10 +3,11 @@ import Main from './pages/Main';
 import Login from './pages/Login';
 
 type Session = ISession | null
+type Role = 'staff' | 'student'
 
 interface ISession {
   username: string
-  role: 'staff' | 'student'
+  role: Role
 }
 
 interface IGlobalSession {
@@ -33,4 +34,5 @@ const App: FC = () => {
 }
 
 export { SessionContext };
+export type { Role };
 export default App;
