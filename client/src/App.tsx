@@ -24,10 +24,7 @@ const App: FC = () => {
       {session ? (
         <Main logout={() => setSession(null)} />
       ) : (
-        <Login login={id => setSession({ 
-          username: id, 
-          role: Math.random() > 0.5 ? 'staff' : 'student' // TODO: change this.
-        })} />
+        <Login login={(id, role) => setSession({ username: id, role })} />
       )}
     </SessionContext.Provider>
   )

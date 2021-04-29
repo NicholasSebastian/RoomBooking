@@ -134,7 +134,7 @@ const Body = styled.div`
             content: "◯";
             color: #d63d07;
             position: absolute;
-            top: 0;
+            top: -2px;
             left: 0;
             transform: scale(2);
           }

@@ -2,6 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 import useSession from '../lib/useSession';
+import postData from '../lib/post';
 import toCurrency from '../lib/currency';
 
 interface ITimetableProps {
@@ -14,8 +15,8 @@ interface ITimePickerProps {
 
 interface IRoomInfo {
   name: string
-  timeFrom: Date
-  timeTo: Date
+  timefrom: Date
+  timeto: Date
   booked: number
   capacity: number
   host: string
@@ -64,7 +65,7 @@ const Timetable: FC<ITimetableProps> = props => {
   const { session } = useSession();
 
   const [data, setData] = useState<Array<IRoomInfo> | null>(null);
-  useEffect(fetchData, []);
+  useEffect(fetchData, [date]);
 
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState<boolean>(false);
@@ -77,18 +78,25 @@ const Timetable: FC<ITimetableProps> = props => {
   const [promoCode, setPromoCode] = useState<string>();
 
   function fetchData() {
-    // TODO: fetch here
-    // setData();
+    postData('http://localhost:8080/api/rooms', { date })
+    .then((rooms: Array<IRoomInfo>) => {
+      setData(rooms.map(room => ({ 
+        ...room, booked: 0, 
+        timefrom: new Date(room.timefrom), 
+        timeto: new Date(room.timeto) 
+      })));
+    });
   }
 
   function handleSubmit (launch: boolean) {
-    const noBlank = [roomName, timeFrom, timeTo, roomCapacity, roomPrice].every(f => f !== undefined);
-    if (noBlank) {
+    const noBlank = [roomName, roomCapacity, roomPrice].every(f => f && f.length > 0);
+    const timeSet = (timeFrom !== undefined) && (timeTo !== undefined);
+    if (noBlank && timeSet) {
       setError(null);
       const formData: IRoomInfo = {
         name: roomName!,
-        timeFrom: timeFrom!,
-        timeTo: timeTo!,
+        timefrom: timeFrom!,
+        timeto: timeTo!,
         booked: 0,
         capacity: parseInt(roomCapacity!),
         host: session!.username,
@@ -96,14 +104,19 @@ const Timetable: FC<ITimetableProps> = props => {
         active: launch,
         promocode: promoCode || null
       };
-      // TODO: submit here
-      console.log(formData);
+      postData('http://localhost:8080/api/createroom', formData)
+      .then(() => {
+        setAdding(false);
+        fetchData();
+      })
+      .catch(() => setError("A problem occured."));
     }
     else {
       setError("All fields must not be blank.");
     }
   }
 
+  // TODO: fix this, the dates are not being inputted properly.
   function dateFromChange (prevState?: Date, hour?: number, minute?: number) {
     const newDate = new Date(prevState?.getTime() || date.getTime());
     if (hour) {
@@ -137,10 +150,9 @@ const Timetable: FC<ITimetableProps> = props => {
       {adding ? Form : (
         <button onClick={() => setAdding(true)}>Create New Room</button>
       )}
-      {!data ? (
-        <div>loading...</div>
-      ) : (
-        <table>
+      {!data ? <div>loading...</div> : 
+      data.length === 0 ? <div>No rooms available.</div> : (
+        <Table>
           <thead>
             <tr>
               <th>Room Name</th>
@@ -156,7 +168,7 @@ const Timetable: FC<ITimetableProps> = props => {
             {data.map((room, i) => (
               <tr key={i}>
                 <td>{room.name}</td>
-                <td>{`${room.timeFrom.toLocaleTimeString()}-${room.timeTo.toLocaleTimeString()}`}</td>
+                <td>{`${room.timefrom.toLocaleTimeString()}-${room.timeto.toLocaleTimeString()}`}</td>
                 <td>{`${room.booked}/${room.capacity}`}</td>
                 <td>{room.host}</td>
                 <td>{toCurrency(room.price)}</td>
@@ -165,7 +177,7 @@ const Timetable: FC<ITimetableProps> = props => {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       )}
     </Body>
   );
@@ -195,30 +207,30 @@ const Body = styled.div`
       background-color: #222323;
     }
   }
+`;
 
-  > table {
-    border-collapse: collapse;
-    width: 100%;
+const Table = styled.table`
+  border-collapse: collapse;
+  width: 100%;
 
-    th, td {
-      border: 1px solid #ccc;
-      text-align: center;
+  th, td {
+    border: 1px solid #ccc;
+    text-align: center;
 
-      &:first-child {
-        text-align: left;
-        padding-left: 10px;
-      }
+    &:first-child {
+      text-align: left;
+      padding-left: 10px;
     }
+  }
 
-    th {
-      background-color: #01668c;
-      color: #fff;
-      padding: 10px 0;
-    }
+  th {
+    background-color: #01668c;
+    color: #fff;
+    padding: 10px 0;
+  }
 
-    td {
-      padding: 15px 0;
-    }
+  td {
+    padding: 15px 0;
   }
 `;
 

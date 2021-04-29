@@ -1,9 +1,12 @@
 import { FC, useState } from 'react';
 import styled from 'styled-components';
+
+import { Role } from '../App';
 import Layout from '../components/Layout';
+import postData from '../lib/post';
 
 interface ILoginProps {
-  login: (id: string) => void
+  login: (id: string, role: Role) => void
 }
 
 interface IErrorProps {
@@ -19,15 +22,37 @@ const Login: FC<ILoginProps> = ({ login }) => {
   const [role, setRole] = useState<string>('student');
 
   function handleSubmit() {
+    const noBlank = username.length > 0 && password.length > 0;
+    if (!noBlank) {
+      setError("Username and Password fields cannot be blank.");
+      return;
+    }
+
     if (mode) {
-      // TODO: signup new account here.
+      const data = { username, password, role };
+      postData('http://localhost:8080/api/auth/signup', data)
+      .then(response => {
+        if (response.created) {
+          login(username, role as Role);
+        }
+        else {
+          setError("Username already taken.");
+        }
+      })
+      .catch(console.log);
     }
     else {
-      // TODO: login authentication here.
-      if (username) {
-        login(username);
-      }
-      else setError("Invalid Username or Password. Please try again.");
+      const data = { username, password };
+      postData('http://localhost:8080/api/auth/login', data)
+      .then(response => {
+        if (response.auth) {
+          login(username, response.role);
+        }
+        else {
+          setError("Invalid Username or Password. Please try again.");
+        }
+      })
+      .catch(console.log);
     }
   }
 
