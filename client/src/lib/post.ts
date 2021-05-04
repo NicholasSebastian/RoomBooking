@@ -16,7 +16,7 @@ async function parse (response: Response) {
 async function getData (endpoint: string) {
   const url = BASEURL + endpoint;
   const response = await fetch(url, { method: 'GET' });
-  const data = parse(response);
+  const data = await parse(response);
 
   if (!response.ok) {
     console.log(data);
@@ -36,7 +36,7 @@ async function postData (endpoint: string, body: object) {
     body: JSON.stringify(body)
   };
   const response = await fetch(url, options);
-  const data = parse(response);
+  const data = await parse(response);
   
   if (!response.ok) {
     console.log(data);
