@@ -25,10 +25,6 @@ const pages: Pages = {
       page: lazy(() => import('./pages/student/ViewCalendar'))
     },
     {
-      name: "Available Rooms",
-      page: lazy(() => import('./pages/student/ViewRooms'))
-    },
-    {
       name: "Booking History",
       page: lazy(() => import('./pages/student/BookingHistory'))
     }

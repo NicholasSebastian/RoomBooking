@@ -30,7 +30,7 @@ const Login: FC<ILoginProps> = ({ login }) => {
 
     if (mode) {
       const data = { username, password, role };
-      postData('http://localhost:8080/api/auth/signup', data)
+      postData('/api/auth/signup', data)
       .then(response => {
         if (response.created) {
           login(username, role as Role);
@@ -43,7 +43,7 @@ const Login: FC<ILoginProps> = ({ login }) => {
     }
     else {
       const data = { username, password };
-      postData('http://localhost:8080/api/auth/login', data)
+      postData('/api/auth/login', data)
       .then(response => {
         if (response.auth) {
           login(username, response.role);

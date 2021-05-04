@@ -3,6 +3,19 @@ import ReactDOM from 'react-dom';
 import { createGlobalStyle } from 'styled-components';
 import App from './App';
 
+// eslint-disable-next-line no-extend-native
+Date.prototype.toJSON = function () {
+  const timezoneOffsetInHours = -(this.getTimezoneOffset() / 60);
+  const sign = timezoneOffsetInHours >= 0 ? '+' : '-';
+  const leadingZero = (Math.abs(timezoneOffsetInHours) < 10) ? '0' : '';
+
+  const correctedDate = new Date(this.getTime());
+  correctedDate.setHours(this.getHours() + timezoneOffsetInHours);
+  const iso = correctedDate.toISOString().replace('Z', '');
+
+  return iso + sign + leadingZero + Math.abs(timezoneOffsetInHours).toString() + ':00';
+}
+
 const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;

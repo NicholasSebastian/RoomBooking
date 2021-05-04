@@ -17,6 +17,17 @@ interface IButtonStyleProps extends IButtonProps {
   currentIndex: number
 }
 
+interface IRoomInfo {
+  name: string
+  timefrom: Date
+  timeto: Date
+  capacity: number
+  host: string
+  price: number
+  active: boolean
+  promocode: string | null
+}
+
 const Main: FC<IMainProps> = () => {
   const { session } = useSession();
   const [page, setPage] = useState<number>(0);
@@ -45,6 +56,7 @@ const Main: FC<IMainProps> = () => {
   );
 }
 
+export type { IRoomInfo };
 export default Main;
 
 const StyledLayout = styled(Layout)`
