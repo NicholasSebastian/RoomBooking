@@ -37,6 +37,7 @@ async function postData (endpoint: string, body: object) {
   };
   const response = await fetch(url, options);
   const data = await parse(response);
+  console.log(url, body, response, data);
   
   if (!response.ok) {
     console.log(data);
