@@ -1,4 +1,4 @@
-const BASEURL = 'http://localhost:8080';
+const BASEURL = window.location.href.slice(0, -1);
 
 function getData (endpoint: string) {
   const url = BASEURL + endpoint;
