@@ -3,8 +3,6 @@ import express from 'express';
 import { Pool } from 'pg';
 import { json } from 'body-parser';
 import { v4 as generateId } from 'uuid';
-import { config } from 'dotenv';
-config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -15,11 +13,7 @@ app.use(json());
 app.use(express.static(path.resolve(__dirname, '../client/build')));
 
 const pool = new Pool(isProduction ? {
-  user: process.env.DATABASE_USER,
-  host: process.env.DATABASE_URL,
-  database: process.env.DATABASE_NAME,
-  password: process.env.DATABASE_PASSWORD,
-  port: 5432
+  connectionString: process.env.DATABASE_URL
 } : {
   host: 'localhost',
   database: 'room_booking',
