@@ -2,7 +2,6 @@ import path from 'path';
 import express from 'express';
 import { Pool } from 'pg';
 import { json } from 'body-parser';
-import cors from 'cors';
 import { v4 as generateId } from 'uuid';
 import { config } from 'dotenv';
 config();
@@ -12,7 +11,6 @@ const PORT = process.env.PORT || 8080;
 const isProduction = process.env.NODE_ENV === 'production'
 
 app.use(json());
-app.use(cors()); // use cors cause oh well, security is not that important here.
 
 app.use(express.static(path.resolve(__dirname, '../client/build')));
 

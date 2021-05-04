@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "nodemon server/index.ts",
-    "start": "npm-run-all --sequential build serve",
+    "start": "node server/index.js",
     "build": "npm-run-all --parallel build-client build-server",
     "build-client": "cd client/ && npm install && npm run build",
-    "build-server": "tsc --project ./",
-    "serve": "node server/index.js"
+    "build-server": "tsc --project ./"
   },
   "keywords": [],
   "author": "Nicholas Sebastian Hendrata <nicholashendrata110900@gmail.com>",
