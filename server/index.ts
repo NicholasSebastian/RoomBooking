@@ -6,11 +6,15 @@ import { v4 as generateId } from 'uuid';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process.env.NODE_ENV === 'production';
 
-app.use(json());
-
-app.use(express.static(path.resolve(__dirname, '../client/build')));
+if (isProduction) {
+  app.use(express.static(path.resolve(__dirname, '../client/build')));
+}
+else {
+  const cors = require('cors');
+  app.use(cors());
+}
 
 const pool = new Pool(isProduction ? {
   connectionString: process.env.DATABASE_URL
@@ -19,6 +23,8 @@ const pool = new Pool(isProduction ? {
   database: 'room_booking',
   port: 5432
 });
+
+app.use(json());
 
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
@@ -32,7 +38,7 @@ app.post('/api/auth/login', (req, res) => {
       res.status(200).send({ auth: false });
     }
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/auth/signup', (req, res) => {
@@ -47,10 +53,10 @@ app.post('/api/auth/signup', (req, res) => {
       .then(() => {
         res.status(200).send({ created: true });
       })
-      .catch(() => res.status(400).end());
+      .catch(e => res.status(400).send(e));
     }
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/rooms', (req, res) => {
@@ -59,7 +65,7 @@ app.post('/api/rooms', (req, res) => {
   .then(result => {
     res.status(200).send(result.rows);
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/rooms/student', (req, res) => {
@@ -72,7 +78,7 @@ app.post('/api/rooms/student', (req, res) => {
   .then(result => {
     res.status(200).send(result.rows);
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/rooms/create', (req, res) => {
@@ -90,7 +96,7 @@ app.post('/api/rooms/create', (req, res) => {
       res.status(200).send({ added: false });
     }
     else {
-      res.status(400).end();
+      res.status(400).send(error);
     }
   });
 });
@@ -105,7 +111,7 @@ app.post('/api/rooms/update', (req, res) => {
   .then(() => {
     res.status(200).send({ updated: true });
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/rooms/delete', (req, res) => {
@@ -114,7 +120,7 @@ app.post('/api/rooms/delete', (req, res) => {
   .then(() => {
     res.status(200).send({ deleted: true });
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/rooms/launch', (req, res) => {
@@ -123,7 +129,7 @@ app.post('/api/rooms/launch', (req, res) => {
   .then(() => {
     res.status(200).send({ launched: true });
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.get('/api/rooms/:username', (req, res) => {
@@ -132,7 +138,7 @@ app.get('/api/rooms/:username', (req, res) => {
   .then(result => {
     res.status(200).send(result.rows);
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/booking/create', (req, res) => {
@@ -146,7 +152,7 @@ app.post('/api/booking/create', (req, res) => {
   .then(() => {
     res.status(200).send({ bookingId });
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.post('/api/booking/delete', (req, res) => {
@@ -155,7 +161,7 @@ app.post('/api/booking/delete', (req, res) => {
   .then(() => {
     res.status(200).send({ deleted: true });
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.get('/api/booking/:username', (req, res) => {
@@ -169,7 +175,7 @@ app.get('/api/booking/:username', (req, res) => {
   .then(result => {
     res.status(200).send(result.rows);
   })
-  .catch(() => res.status(400).end());
+  .catch(e => res.status(400).send(e));
 });
 
 app.listen(PORT, () => {
