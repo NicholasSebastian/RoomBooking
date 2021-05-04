@@ -7,11 +7,6 @@ import Button from '../../components/WhiteButton';
 import postData, { getData } from '../../lib/post';
 import useSession from '../../lib/useSession';
 
-// TODO: 'booked' count is still 0 on all tables.
-// TODO: prevent booking if capacity is full.
-// TODO: implement promo codes.
-// TODO: 'modify' existing booking.
-
 interface IBooking {
   bookingid: string
   roomname: string

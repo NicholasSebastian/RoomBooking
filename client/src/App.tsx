@@ -2,6 +2,11 @@ import { FC, useState, createContext } from 'react';
 import Main from './pages/Main';
 import Login from './pages/Login';
 
+// TODO: 'booked' count is still 0 on all tables.
+// TODO: prevent booking if capacity is full.
+// TODO: implement promo codes.
+// TODO: 'modify' existing booking.
+
 type Session = ISession | null
 type Role = 'staff' | 'student'
 

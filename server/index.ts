@@ -1,3 +1,4 @@
+import path from 'path';
 import express from 'express';
 import { Pool } from 'pg';
 import { json } from 'body-parser';
@@ -8,17 +9,22 @@ config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const isProduction = process.env.NODE_ENV === 'production'
 
 app.use(json());
 app.use(cors()); // use cors cause oh well, security is not that important here.
 
-const pool = new Pool({
+app.use(express.static(path.resolve(__dirname, '../client/build')));
+
+const pool = new Pool(isProduction ? {
+  user: process.env.DATABASE_USER,
+  host: process.env.DATABASE_URL,
+  database: process.env.DATABASE_NAME,
+  password: process.env.DATABASE_PASSWORD,
+  port: 5432
+} : {
   host: 'localhost',
   database: 'room_booking',
-  // user: process.env.DB_USER,
-  // host: process.env.DB_HOST,
-  // database: process.env.DB_NAME,
-  // password: process.env.DB_PASSWORD,
   port: 5432
 });
 

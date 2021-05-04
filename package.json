@@ -2,11 +2,13 @@
   "name": "room_booking",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
   "scripts": {
-    "start": "node build/index.js",
-    "dev": "nodemon index.ts",
-    "build": "tsc --project ./"
+    "dev": "nodemon server/index.ts",
+    "start": "npm-run-all --sequential build serve",
+    "build": "npm-run-all --parallel build-client build-server",
+    "build-client": "cd client/ && npm install && npm run build",
+    "build-server": "tsc --project ./",
+    "serve": "node server/index.js"
   },
   "keywords": [],
   "author": "Nicholas Sebastian Hendrata <nicholashendrata110900@gmail.com>",
@@ -16,6 +18,7 @@
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "npm-run-all": "^4.1.5",
     "pg": "^8.6.0",
     "uuid": "^8.3.2"
   },
