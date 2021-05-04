@@ -17,7 +17,8 @@ else {
 }
 
 const pool = new Pool(isProduction ? {
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 } : {
   host: 'localhost',
   database: 'room_booking',
