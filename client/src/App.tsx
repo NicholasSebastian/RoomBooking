@@ -2,10 +2,13 @@ import { FC, useState, createContext } from 'react';
 import Main from './pages/Main';
 import Login from './pages/Login';
 
+// TODO: 'modify' existing booking?
+// TODO: fix dates from being sent 7 hours extra.
 // TODO: 'booked' count is still 0 on all tables.
 // TODO: prevent booking if capacity is full.
 // TODO: implement promo codes.
-// TODO: 'modify' existing booking.
+// TODO: encrypt passwords.
+// TODO: loading for login.
 
 type Session = ISession | null
 type Role = 'staff' | 'student'
