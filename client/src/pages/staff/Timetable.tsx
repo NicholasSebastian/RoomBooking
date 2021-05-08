@@ -22,7 +22,7 @@ interface IFormProps {
 }
 
 interface IRoomViewInfo extends IRoomInfo {
-  booked: number
+  bookcount: number
 }
 
 const Form: FC<IFormProps> = props => {
@@ -46,7 +46,7 @@ const Form: FC<IFormProps> = props => {
         name: roomName!,
         timefrom: timeFrom!,
         timeto: timeTo!,
-        booked: 0,
+        bookcount: 0,
         capacity: parseInt(roomCapacity!),
         host: session!.username,
         price: parseFloat(roomPrice!),
@@ -95,9 +95,9 @@ const Timetable: FC<ITimetableProps> = props => {
 
   function fetchData() {
     postData('/api/rooms', { date })
-    .then((rooms: Array<IRoomInfo>) => {
+    .then((rooms: Array<IRoomViewInfo>) => {
       setData(rooms.map(room => ({ 
-        ...room, booked: 0, 
+        ...room, 
         timefrom: new Date(room.timefrom), 
         timeto: new Date(room.timeto) 
       })));
@@ -136,7 +136,7 @@ const Timetable: FC<ITimetableProps> = props => {
               <tr key={i}>
                 <td>{room.name}</td>
                 <td>{`${room.timefrom.toLocaleTimeString()} - ${room.timeto.toLocaleTimeString()}`}</td>
-                <td>{`${room.booked}/${room.capacity}`}</td>
+                <td>{`${room.bookcount}/${room.capacity}`}</td>
                 <td>{room.host}</td>
                 <td>{toCurrency(room.price)}</td>
                 <td>{room.promocode}</td>

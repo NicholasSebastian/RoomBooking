@@ -27,7 +27,6 @@ const Form: FC<IFormProps> = props => {
   const [promoCode, setPromoCode] = useState<string>(room.promocode || '');
 
   function handleSubmit() {
-    console.log(roomCapacity, roomPrice);
     const noBlank = roomCapacity && roomPrice;
     const timeSet = (timeFrom !== undefined) && (timeTo !== undefined);
     if (noBlank && timeSet) {
@@ -73,11 +72,18 @@ const YourRooms: FC = () => {
   const { session } = useSession();
   const [editing, setEditing] = useState<IRoomInfo | null>(null);
 
+  const [revenue, setRevenue] = useState<number>(0);
   const [data, setData] = useState<Array<IRoomInfo> | null>(null);
   useEffect(fetchData, [session]);
 
   function fetchData() {
     if (session) {
+      getData(`/api/revenue/${session.username}`)
+      .then(({ revenue }) => {
+        setRevenue(revenue);
+      })
+      .catch();
+
       getData(`/api/rooms/${session.username}`)
       .then((rooms: Array<IRoomInfo>) => {
         setData(rooms.map(room => ({ 
@@ -112,7 +118,7 @@ const YourRooms: FC = () => {
 
   return (
     <Body>
-      <h3>Your Revenue: {toCurrency(0)}</h3>
+      <h3>Your Revenue: {toCurrency(revenue)}</h3>
       {editing && <Form room={editing} onFinish={() => {
         setEditing(null);
         fetchData();
@@ -123,6 +129,7 @@ const YourRooms: FC = () => {
           <thead>
             <tr>
               <th>Room Name</th>
+              <th>Date</th>
               <th>Time</th>
               <th>Room Capacity</th>
               <th>Price</th>
@@ -137,6 +144,7 @@ const YourRooms: FC = () => {
             .map((room, i) => (
               <tr key={i}>
                 <td>{room.name}</td>
+                <td>{room.timefrom.toLocaleDateString()}</td>
                 <td>{`${room.timefrom.toLocaleTimeString()} - ${room.timeto.toLocaleTimeString()}`}</td>
                 <td>{room.capacity}</td>
                 <td>{toCurrency(room.price)}</td>

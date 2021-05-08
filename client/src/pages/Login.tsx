@@ -16,6 +16,7 @@ interface IErrorProps {
 const Login: FC<ILoginProps> = ({ login }) => {
   const [mode, setMode] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -28,6 +29,7 @@ const Login: FC<ILoginProps> = ({ login }) => {
       return;
     }
 
+    setSubmitted(true);
     if (mode) {
       const data = { username, password, role };
       postData('/api/auth/signup', data)
@@ -38,8 +40,9 @@ const Login: FC<ILoginProps> = ({ login }) => {
         else {
           setError("Username already taken.");
         }
+        setSubmitted(false);
       })
-      .catch(console.log);
+      .catch(() => setSubmitted(false));
     }
     else {
       const data = { username, password };
@@ -51,8 +54,9 @@ const Login: FC<ILoginProps> = ({ login }) => {
         else {
           setError("Invalid Username or Password. Please try again.");
         }
+        setSubmitted(false);
       })
-      .catch(console.log);
+      .catch(() => setSubmitted(false));
     }
   }
 
@@ -82,7 +86,7 @@ const Login: FC<ILoginProps> = ({ login }) => {
             </div>
           )}
           <div>
-            <button onClick={handleSubmit}>Submit</button>
+            <button disabled={submitted} onClick={handleSubmit}>{submitted ? 'Loading' : 'Submit'}</button>
             <button onClick={() => setMode(!mode)}>{mode ? 'Login' : 'Register'}</button>
           </div>
         </div>
@@ -93,7 +97,7 @@ const Login: FC<ILoginProps> = ({ login }) => {
           <p>
             This website only looks like the UOW SOLS. Its not real.<br/>
             Please do <b>not</b> use your real UOW password.<br/>
-            Stored passwords are <b>not</b> encrypted because I'm lazy.
+            Stored passwords <b>are</b> encrypted.
           </p>
         </div>
       </div>
@@ -174,12 +178,19 @@ const StyledLayout = styled(Layout)`
           text-transform: uppercase;
 
           &:first-child {
-            background-color: #324045;
             color: #fff;
             border: none;
+            
+            &:not(:disabled) {
+              background-color: #324045;
 
-            &:hover {
-              cursor: pointer;
+              &:hover {
+                cursor: pointer;
+                background-color: #222323;
+              }
+            }
+
+            &:disabled {
               background-color: #222323;
             }
           }

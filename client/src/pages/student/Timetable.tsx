@@ -7,6 +7,7 @@ import Button from '../../components/DarkButton';
 import WhiteButton from '../../components/WhiteButton';
 import Table from '../../components/Table';
 
+import useSession from '../../lib/useSession';
 import postData from '../../lib/post';
 import toCurrency from '../../lib/currency';
 
@@ -16,26 +17,29 @@ interface ITimetableProps {
 }
 
 interface IRoomViewInfo extends IRoomInfo {
-  booked: number
+  bookcount: number
 }
 
 const Timetable: FC<ITimetableProps> = props => {
   const { date, close } = props;
+  const { session } = useSession();
   const [booking, setBooking] = useState<IRoomInfo | null>(null);
 
   const [data, setData] = useState<Array<IRoomViewInfo> | null>(null);
-  useEffect(fetchData, [date]);
+  useEffect(fetchData, [date, session]);
 
   function fetchData() {
-    postData('/api/rooms/student', { date })
-    .then((rooms: Array<any>) => {
-      setData(rooms.map(room => ({ 
-        ...room, booked: 0, 
-        timefrom: new Date(room.timefrom), 
-        timeto: new Date(room.timeto) 
-      })));
-    })
-    .catch();
+    if (session) {
+      postData('/api/rooms/student', { date, user: session.username })
+      .then((rooms: Array<any>) => {
+        setData(rooms.map(room => ({ 
+          ...room,
+          timefrom: new Date(room.timefrom), 
+          timeto: new Date(room.timeto) 
+        })));
+      })
+      .catch();
+    }
   }
 
   return booking ? (
@@ -59,18 +63,23 @@ const Timetable: FC<ITimetableProps> = props => {
           <tbody>
             {data
             .sort((a, b) => a.name.localeCompare(b.name))
-            .map((room, i) => (
-              <tr key={i}>
-                <td>{room.name}</td>
-                <td>{`${room.timefrom.toLocaleTimeString()} - ${room.timeto.toLocaleTimeString()}`}</td>
-                <td>{`${room.booked}/${room.capacity}`}</td>
-                <td>{room.host}</td>
-                <td>{toCurrency(room.price)}</td>
-                <td>
-                  <WhiteButton onClick={() => setBooking(room)}>Book</WhiteButton>
-                </td>
-              </tr>
-            ))}
+            .map((room, i) => {
+              const hasSpace = room.bookcount < room.capacity;
+              return (
+                <tr key={i}>
+                  <td>{room.name}</td>
+                  <td>{`${room.timefrom.toLocaleTimeString()} - ${room.timeto.toLocaleTimeString()}`}</td>
+                  <td>{`${room.bookcount}/${room.capacity}`}</td>
+                  <td>{room.host}</td>
+                  <td>{toCurrency(room.price)}</td>
+                  <td>
+                    <WhiteButton disabled={!hasSpace} onClick={() => setBooking(room)}>
+                      {hasSpace ? 'Book' : 'Full'}
+                    </WhiteButton>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </Table>
       )}

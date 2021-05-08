@@ -3,66 +3,87 @@ import express from 'express';
 import { Pool } from 'pg';
 import { json } from 'body-parser';
 import { v4 as generateId } from 'uuid';
+import { genSalt, hash, compare } from 'bcrypt';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const isProduction = process.env.NODE_ENV === 'production';
 
+let pool: Pool;
+
 if (isProduction) {
   app.use(express.static(path.resolve(__dirname, '../client/build')));
+
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
 }
 else {
   const cors = require('cors');
   app.use(cors());
-}
 
-const pool = new Pool(isProduction ? {
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-} : {
-  host: 'localhost',
-  database: 'room_booking',
-  port: 5432
-});
+  require('dotenv').config();  
+  pool = new Pool({
+    host: 'localhost',
+    port: 5432,
+    database: process.env.DATABASE_NAME,
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD
+  });
+}
 
 app.use(json());
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
-  pool.query('SELECT password, role FROM accounts WHERE username = $1', [username])
-  .then(result => {
+  try {
+    const result = await pool.query('SELECT password, role FROM accounts WHERE username = $1', [username]);
     const accountExists = result.rowCount > 0;
-    if (accountExists && (password === result.rows[0].password)) {
-      res.status(200).send({ auth: true, role: result.rows[0].role });
+    if (accountExists) {
+      const passwordMatches = await compare(password, result.rows[0].password)
+      if (passwordMatches) {
+        res.status(200).send({ auth: true, role: result.rows[0].role });
+      }
     }
-    else {
-      res.status(200).send({ auth: false });
-    }
-  })
-  .catch(e => res.status(400).send(e));
+    res.status(200).send({ auth: false });
+  }
+  catch(e) {
+    res.status(400).send(e)
+  }
 });
 
-app.post('/api/auth/signup', (req, res) => {
+app.post('/api/auth/signup', async (req, res) => {
   const { username, password, role } = req.body;
-  pool.query('SELECT * FROM accounts WHERE username = $1', [username])
-  .then(result => {
+  try {
+    const result = await pool.query('SELECT * FROM accounts WHERE username = $1', [username]);
     if (result.rowCount > 0) {
       res.status(200).send({ created: false });
     }
     else {
-      pool.query('INSERT INTO accounts (username, password, role) VALUES ($1, $2, $3)', [username, password, role])
-      .then(() => {
-        res.status(200).send({ created: true });
-      })
-      .catch(e => res.status(400).send(e));
+      const salt = await genSalt();
+      const hashedPassword = await hash(password, salt);
+      await pool.query('\
+        INSERT INTO accounts (username, password, role) VALUES ($1, $2, $3)', 
+        [username, hashedPassword, role]
+      )
+      res.status(200).send({ created: true });
     }
-  })
-  .catch(e => res.status(400).send(e));
+  }
+  catch(e) {
+    res.status(400).send(e)
+  }
 });
 
 app.post('/api/rooms', (req, res) => {
   const { date } = req.body;
-  pool.query('SELECT * FROM rooms WHERE timefrom::date = $1', [date])
+  pool.query('\
+    SELECT rooms.*, COUNT(bookingid) AS bookcount \
+    FROM rooms LEFT JOIN bookings ON rooms.name = bookings.roomname \
+    WHERE timefrom::date = $1 \
+    GROUP BY rooms.name', 
+    [date]
+  )
   .then(result => {
     res.status(200).send(result.rows);
   })
@@ -70,11 +91,14 @@ app.post('/api/rooms', (req, res) => {
 });
 
 app.post('/api/rooms/student', (req, res) => {
-  const { date } = req.body;
+  const { date, user } = req.body;
   pool.query('\
-    SELECT name, timefrom, timeto, capacity, host, price FROM rooms \
-    WHERE timefrom::date = $1 AND active = $2',
-    [date, true]
+    SELECT name, timefrom, timeto, capacity, host, rooms.price, COUNT(bookingid) AS bookcount \
+    FROM rooms LEFT JOIN bookings ON rooms.name = bookings.roomname \
+    WHERE timefrom::date = $1 AND active = $2 AND \
+    name NOT IN (SELECT roomname FROM bookings WHERE booker = $3) \
+    GROUP BY rooms.name',
+    [date, true, user]
   )
   .then(result => {
     res.status(200).send(result.rows);
@@ -142,6 +166,20 @@ app.get('/api/rooms/:username', (req, res) => {
   .catch(e => res.status(400).send(e));
 });
 
+app.get('/api/revenue/:username', (req, res) => {
+  const user = req.params.username;
+  pool.query('\
+    SELECT SUM(price) FROM bookings WHERE roomname IN \
+    (SELECT name FROM rooms WHERE host = $1)',
+    [user]
+  )
+  .then(result => {
+    const { sum } = result.rows[0];
+    res.status(200).send({ revenue: sum });
+  })
+  .catch(e => res.status(400).send(e));
+});
+
 app.post('/api/booking/create', (req, res) => {
   const { user, room, price, date } = req.body;
   const bookingId = generateId();
@@ -169,7 +207,7 @@ app.get('/api/booking/:username', (req, res) => {
   const user = req.params.username;
   pool.query('\
     SELECT bookingid, roomname, timefrom, timeto, purchasedate FROM bookings \
-    LEFT JOIN rooms ON bookings.roomname = rooms.name\
+    LEFT JOIN rooms ON bookings.roomname = rooms.name \
     WHERE booker = $1', 
     [user]
   )
